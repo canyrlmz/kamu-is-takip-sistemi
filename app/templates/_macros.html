@@ -1,0 +1,41 @@
+{% macro flashes() %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category if category in ['success','danger','warning','info'] else 'info' }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+      </div>
+    {% endfor %}
+  {% endwith %}
+{% endmacro %}
+
+{% macro field(f) %}
+  <div class="mb-3">
+    {{ f.label(class="form-label") }}
+    {% set base_class = "form-select" if f.type == "SelectField" else "form-control" %}
+    {{ f(class=base_class ~ (" is-invalid" if f.errors else ""), **kwargs) }}
+    {% for error in f.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro render_pagination(p, endpoint) %}
+  {% if p.pages > 1 %}
+  <nav aria-label="Sayfalama">
+    <ul class="pagination pagination-sm flex-wrap mb-0">
+      <li class="page-item {{ 'disabled' if not p.has_prev }}">
+        <a class="page-link" href="{{ url_for(endpoint, sayfa=p.prev_num, **kwargs) if p.has_prev else '#' }}">Önceki</a>
+      </li>
+      {% for n in p.iter_pages() %}
+        {% if n %}
+          <li class="page-item {{ 'active' if n == p.page }}"><a class="page-link" href="{{ url_for(endpoint, sayfa=n, **kwargs) }}">{{ n }}</a></li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">…</span></li>
+        {% endif %}
+      {% endfor %}
+      <li class="page-item {{ 'disabled' if not p.has_next }}">
+        <a class="page-link" href="{{ url_for(endpoint, sayfa=p.next_num, **kwargs) if p.has_next else '#' }}">Sonraki</a>
+      </li>
+    </ul>
+  </nav>
+  {% endif %}
+{% endmacro %}

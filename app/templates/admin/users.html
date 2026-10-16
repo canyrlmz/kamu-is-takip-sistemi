@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from "_macros.html" import render_pagination %}
+{% block title %}Kullanıcılar{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+  <h1 class="h3 mb-0">Kullanıcılar</h1>
+  <a href="{{ url_for('admin.user_new') }}" class="btn btn-primary btn-sm">Yeni hesap</a>
+</div>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-sm table-hover mb-0 align-middle">
+      <thead>
+        <tr><th>Kullanıcı adı</th><th>Ad soyad</th><th>Rol</th><th>Kıdem</th><th>İzin</th><th>Durum</th><th>Son giriş</th><th class="text-end">İşlem</th></tr>
+      </thead>
+      <tbody>
+      {% for u in pagination.items %}
+        <tr>
+          <td>{{ u.username }}{% if u.id == current_user.id %} <span class="badge text-bg-light">siz</span>{% endif %}</td>
+          <td>{{ u.full_name }}</td>
+          <td>{{ u.role_label }}</td>
+          <td>{{ u.seniority_level }}</td>
+          <td class="text-nowrap">{% if u.is_superadmin %}Tümü{% else %}{{ u.effective_permissions|length }}{% endif %}</td>
+          <td>
+            {% if u.active %}<span class="badge text-bg-success">Etkin</span>
+            {% else %}<span class="badge text-bg-secondary">Devre dışı</span>{% endif %}
+          </td>
+          <td class="text-nowrap">{{ u.last_login_at|dt }}</td>
+          <td class="text-end text-nowrap">
+            <a href="{{ url_for('admin.user_edit', user_id=u.id) }}" class="btn btn-outline-primary btn-sm">Düzenle</a>
+            {% if u.is_superadmin %}
+            {# Süper admin devre dışı bırakılamaz; devir yalnızca sunucudaki komutla yapılır. #}
+            {% elif u.active %}
+            <form method="post" action="{{ url_for('admin.user_deactivate', user_id=u.id) }}" class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-outline-danger btn-sm">Devre dışı bırak</button>
+            </form>
+            {% else %}
+            <form method="post" action="{{ url_for('admin.user_activate', user_id=u.id) }}" class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-outline-success btn-sm">Etkinleştir</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="8" class="text-secondary">Kullanıcı bulunamadı.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <small class="text-secondary">Toplam {{ pagination.total }} kullanıcı</small>
+    {{ render_pagination(pagination, 'admin.users') }}
+  </div>
+</div>
+{% endblock %}

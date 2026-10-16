@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field %}
+{% block title %}Zimmet iade al{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+  <h1 class="h3 mb-0">Zimmet iade al</h1>
+  <a href="{{ url_for('assets.detail', asset_id=asset.id) }}" class="btn btn-outline-secondary btn-sm">Vazgeç</a>
+</div>
+<div class="card form-card">
+  <div class="card-body">
+    <p class="mb-1"><strong>{{ asset.code }}</strong> · {{ asset.name }}</p>
+    <p class="text-secondary small">Zimmetli personel: {{ current.assignee.full_name }} · Başlangıç: {{ current.start_date|d }}</p>
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {{ field(form.return_date) }}
+      {{ field(form.status_after) }}
+      {{ field(form.note, rows=3, maxlength=500) }}
+      {{ form.submit(class="btn btn-primary") }}
+    </form>
+  </div>
+</div>
+{% endblock %}

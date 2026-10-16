@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}{{ ticket.number }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+  <div>
+    <h1 class="h3 mb-1">{{ ticket.title }}</h1>
+    <div>
+      <span class="text-secondary me-2">{{ ticket.number }}</span>
+      <span class="badge text-bg-{{ ticket.status_badge }}">{{ ticket.status_label }}</span>
+      <span class="badge text-bg-{{ ticket.priority_badge }}">{{ ticket.priority_label }}</span>
+    </div>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <a href="{{ url_for('tickets.index') }}" class="btn btn-outline-secondary btn-sm">Listeye dön</a>
+    {% if can_assign %}<a href="{{ url_for('tickets.assign', ticket_id=ticket.id) }}" class="btn btn-outline-primary btn-sm">{{ 'Yeniden ata' if ticket.assigned_to else 'Sorumlu ata' }}</a>{% endif %}
+    {% if can_change_status %}<a href="{{ url_for('tickets.status', ticket_id=ticket.id) }}" class="btn btn-primary btn-sm">Durumu değiştir</a>{% endif %}
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-12 col-lg-7">
+    <div class="card h-100"><div class="card-header">Talep bilgileri</div>
+      <dl class="row mb-0 p-3 detail-list">
+        <dt class="col-sm-4">Açıklama</dt><dd class="col-sm-8 text-break" style="white-space: pre-line;">{{ ticket.description }}</dd>
+        <dt class="col-sm-4">Kategori</dt><dd class="col-sm-8">{{ ticket.category_label }}</dd>
+        <dt class="col-sm-4">Yer / konum</dt><dd class="col-sm-8">{{ ticket.location }}</dd>
+        <dt class="col-sm-4">Talebi açan</dt><dd class="col-sm-8">{{ ticket.created_by.full_name }}</dd>
+        <dt class="col-sm-4">Oluşturulma</dt><dd class="col-sm-8">{{ ticket.created_at|dt }}</dd>
+        <dt class="col-sm-4">Son güncelleme</dt><dd class="col-sm-8">{{ ticket.updated_at|dt }}</dd>
+        {% if ticket.closed_at %}
+        <dt class="col-sm-4">Kapanış</dt><dd class="col-sm-8">{{ ticket.closed_at|dt }}</dd>
+        <dt class="col-sm-4">{{ 'Çözüm açıklaması' if ticket.status == 'resolved' else 'Ret gerekçesi' }}</dt><dd class="col-sm-8 text-break">{{ ticket.resolution_note }}</dd>
+        {% endif %}
+      </dl>
+    </div>
+  </div>
+  <div class="col-12 col-lg-5">
+    <div class="card h-100"><div class="card-header">Sorumlu</div>
+      <div class="card-body">
+        {% if ticket.assigned_to %}
+          <div class="h5 mb-1">{{ ticket.assigned_to.full_name }}</div>
+          <div class="text-secondary small">{{ ticket.assigned_to.username }}{% if not ticket.assigned_to.active %} · <span class="badge text-bg-secondary">Devre dışı hesap</span>{% endif %}</div>
+        {% else %}
+          <p class="text-secondary mb-0">Henüz sorumlu atanmadı.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">İşlem geçmişi</div>
+  <div class="table-responsive">
+    <table class="table table-sm mb-0 align-middle">
+      <thead><tr><th>Zaman</th><th>İşlem</th><th>Yapan</th><th>Not</th></tr></thead>
+      <tbody>
+      {% for e in events %}
+        <tr>
+          <td class="text-nowrap">{{ e.created_at|dt }}</td>
+          <td>
+            {% if e.event_type == 'created' %}Talep oluşturuldu
+            {% elif e.event_type == 'status_changed' %}Durum: <strong>{{ e.from_status_label }}</strong> → <strong>{{ e.to_status_label }}</strong>
+            {% elif e.event_type == 'assigned' %}Sorumlu atandı: <strong>{{ e.to_assignee.full_name }}</strong>
+            {% elif e.event_type == 'reassigned' %}Yeniden atandı: {{ e.from_assignee.full_name }} → <strong>{{ e.to_assignee.full_name }}</strong>
+            {% endif %}
+          </td>
+          <td>{{ e.actor.full_name }}</td>
+          <td class="text-break">{{ e.note or '—' }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

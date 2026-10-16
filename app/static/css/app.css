@@ -1,0 +1,39 @@
+:root {
+  --kurum-lacivert: #1f3a5f;
+  --kurum-lacivert-koyu: #162b47;
+  --yuzey: #f4f6f9;
+}
+
+body { background: var(--yuzey); }
+
+.app-topbar { background: var(--kurum-lacivert); padding: .5rem 0; }
+.app-topbar .navbar-brand { color: #fff; font-size: 1rem; font-weight: 600; white-space: normal; }
+.topbar-user { color: #dbe4f0; font-size: .9rem; }
+.topbar-user small { color: #aebfd6; }
+.app-topbar .navbar-toggler { border-color: rgba(255, 255, 255, .5); }
+.app-topbar .navbar-toggler-icon { filter: invert(1); }
+
+.app-shell { display: flex; min-height: calc(100vh - 56px); }
+.app-main { flex: 1 1 auto; min-width: 0; padding: 1.25rem; }
+
+.app-sidebar .nav-link { color: #2b3a4d; border-radius: .375rem; }
+.app-sidebar .nav-link.active { background: var(--kurum-lacivert); color: #fff; }
+.app-sidebar .nav-link.disabled { color: #8a96a6; }
+.sidebar-heading { font-size: .8rem; color: #6b7686; padding: 0 1rem; }
+
+@media (min-width: 992px) {
+  .app-sidebar { flex: 0 0 250px; width: 250px; background: #fff; border-right: 1px solid #dde3ea; }
+  .app-sidebar .offcanvas-body { padding: 1rem .75rem; }
+  .app-main { padding: 1.75rem 2rem; }
+}
+
+.module-card { border-style: dashed; }
+
+.public-body { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+.public-wrap { width: 100%; max-width: 420px; padding: 1rem; }
+.login-card { border: 0; }
+.btn-primary { --bs-btn-bg: var(--kurum-lacivert); --bs-btn-border-color: var(--kurum-lacivert);
+  --bs-btn-hover-bg: var(--kurum-lacivert-koyu); --bs-btn-hover-border-color: var(--kurum-lacivert-koyu);
+  --bs-btn-active-bg: var(--kurum-lacivert-koyu); --bs-btn-active-border-color: var(--kurum-lacivert-koyu); }
+
+.form-card { max-width: 560px; }

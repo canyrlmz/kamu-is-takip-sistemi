@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Kontrol Paneli{% endblock %} · Takip Sistemi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+  {% from "_macros.html" import flashes %}
+  <header class="app-topbar navbar sticky-top">
+    <div class="container-fluid gap-2">
+      <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="offcanvas"
+              data-bs-target="#sidebar" aria-controls="sidebar" aria-label="Menüyü aç">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <a class="navbar-brand me-auto" href="{{ url_for('dashboard.index') }}">Can Yorulmaz · Kamu İş Takip Sistemi</a>
+      <div class="d-flex align-items-center gap-3">
+        <span class="topbar-user d-none d-sm-inline">{{ current_user.full_name }} <small>({{ current_user.role_label }})</small></span>
+        <form method="post" action="{{ url_for('auth.logout') }}" class="m-0">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-sm btn-outline-light">Çıkış</button>
+        </form>
+      </div>
+    </div>
+  </header>
+
+  <div class="app-shell">
+    <nav class="offcanvas-lg offcanvas-start app-sidebar" tabindex="-1" id="sidebar" aria-label="Modül menüsü">
+      <div class="offcanvas-header d-lg-none">
+        <h5 class="offcanvas-title">Menü</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Kapat"></button>
+      </div>
+      <div class="offcanvas-body flex-column">
+        <ul class="nav nav-pills flex-column gap-1">
+          <li class="nav-item">
+            <a class="nav-link {{ 'active' if request.endpoint == 'dashboard.index' }}" href="{{ url_for('dashboard.index') }}">Kontrol Paneli</a>
+          </li>
+          {# Menü yalnızca kolaylıktır; her route ve servis izni ayrıca sunucuda denetler. #}
+          {% if can('assets.view') %}
+          <li class="nav-item">
+            <a class="nav-link {{ 'active' if request.blueprint == 'assets' }}" href="{{ url_for('assets.index') }}">Demirbaş ve Zimmet</a>
+          </li>
+          {% endif %}
+          {% if can('tickets.view', 'tickets.view_all') %}
+          <li class="nav-item">
+            <a class="nav-link {{ 'active' if request.blueprint == 'tickets' }}" href="{{ url_for('tickets.index') }}">Arıza ve Talepler</a>
+          </li>
+          {% endif %}
+          {% if can('vehicles.view') %}
+          <li class="nav-item">
+            <a class="nav-link {{ 'active' if request.blueprint == 'vehicles' }}" href="{{ url_for('vehicles.index') }}">Araç ve Bakım</a>
+          </li>
+          {% endif %}
+          {% if can('users.manage', 'audit.view') %}
+          <li class="nav-item mt-3 sidebar-heading">Yönetim</li>
+          {% endif %}
+          {% if can('users.manage') %}
+          <li class="nav-item">
+            <a class="nav-link {{ 'active' if request.endpoint in ('admin.users', 'admin.user_new', 'admin.user_edit') }}" href="{{ url_for('admin.users') }}">Kullanıcılar</a>
+          </li>
+          {% endif %}
+          {% if can('audit.view') %}
+          <li class="nav-item">
+            <a class="nav-link {{ 'active' if request.endpoint == 'admin.audit_log' }}" href="{{ url_for('admin.audit_log') }}">Denetim Kayıtları</a>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+    </nav>
+
+    <main class="app-main">
+      {{ flashes() }}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <script src="{{ url_for('static', filename='vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

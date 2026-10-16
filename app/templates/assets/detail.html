@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}{{ asset.code }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+  <div>
+    <h1 class="h3 mb-1">{{ asset.name }}</h1>
+    <div>
+      <span class="text-secondary me-2">{{ asset.code }}</span>
+      <span class="badge text-bg-{{ asset.status_badge }}">{{ asset.status_label }}</span>
+      {% if asset.archived %}<span class="badge text-bg-dark">Arşivde</span>{% endif %}
+    </div>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <a href="{{ url_for('assets.index') }}" class="btn btn-outline-secondary btn-sm">Listeye dön</a>
+    {% if not asset.archived %}
+      {% if can('assets.update') %}<a href="{{ url_for('assets.edit', asset_id=asset.id) }}" class="btn btn-outline-primary btn-sm">Düzenle</a>{% endif %}
+      {% if current %}
+        {% if can('assets.assign') %}<a href="{{ url_for('assets.return_', asset_id=asset.id) }}" class="btn btn-primary btn-sm">İade al</a>{% endif %}
+      {% else %}
+        {% if asset.status == 'in_storage' and can('assets.assign') %}<a href="{{ url_for('assets.assign', asset_id=asset.id) }}" class="btn btn-primary btn-sm">Zimmet ver</a>{% endif %}
+        {% if can('assets.update') %}
+        <form method="post" action="{{ url_for('assets.archive', asset_id=asset.id) }}" class="d-inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-outline-danger btn-sm">Arşivle (pasife al)</button>
+        </form>
+        {% endif %}
+      {% endif %}
+    {% elif can('assets.update') %}
+      <form method="post" action="{{ url_for('assets.restore', asset_id=asset.id) }}" class="d-inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-outline-success btn-sm">Arşivden geri al</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-12 col-lg-7">
+    <div class="card h-100"><div class="card-header">Demirbaş bilgileri</div>
+      <dl class="row mb-0 p-3 detail-list">
+        <dt class="col-sm-4">Kategori</dt><dd class="col-sm-8">{{ asset.category }}</dd>
+        <dt class="col-sm-4">Marka / model</dt><dd class="col-sm-8">{{ asset.brand or '—' }} / {{ asset.model or '—' }}</dd>
+        <dt class="col-sm-4">Seri numarası</dt><dd class="col-sm-8">{{ asset.serial_number or '—' }}</dd>
+        <dt class="col-sm-4">Konum</dt><dd class="col-sm-8">{{ asset.location or '—' }}</dd>
+        <dt class="col-sm-4">Edinim tarihi</dt><dd class="col-sm-8">{{ asset.acquisition_date|d }}</dd>
+        <dt class="col-sm-4">Açıklama</dt><dd class="col-sm-8">{{ asset.description or '—' }}</dd>
+        <dt class="col-sm-4">Oluşturan</dt><dd class="col-sm-8">{{ asset.created_by.full_name if asset.created_by else '—' }} · {{ asset.created_at|dt }}</dd>
+        <dt class="col-sm-4">Son güncelleme</dt><dd class="col-sm-8">{{ asset.updated_by.full_name if asset.updated_by else '—' }} · {{ asset.updated_at|dt }}</dd>
+      </dl>
+    </div>
+  </div>
+  <div class="col-12 col-lg-5">
+    <div class="card h-100"><div class="card-header">Güncel zimmet</div>
+      <div class="card-body">
+        {% if current %}
+          <div class="h5 mb-1">{{ current.assignee.full_name }}</div>
+          <div class="text-secondary small mb-2">{{ current.assignee.username }} · {{ current.start_date|d }} tarihinden beri</div>
+          {% if current.assign_note %}<p class="mb-0">{{ current.assign_note }}</p>{% endif %}
+        {% else %}
+          <p class="text-secondary mb-0">Şu anda zimmetli değil.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">Zimmet geçmişi</div>
+  <div class="table-responsive">
+    <table class="table table-sm mb-0 align-middle">
+      <thead><tr><th>Personel</th><th>Başlangıç</th><th>İade</th><th>Zimmeti veren</th><th>İadeyi alan</th><th>Notlar</th></tr></thead>
+      <tbody>
+      {% for h in history %}
+        <tr>
+          <td>{{ h.assignee.full_name }} <small class="text-secondary">({{ h.assignee.username }})</small></td>
+          <td class="text-nowrap">{{ h.start_date|d }}</td>
+          <td class="text-nowrap">{% if h.return_date %}{{ h.return_date|d }}{% else %}<span class="badge text-bg-success">Devam ediyor</span>{% endif %}</td>
+          <td>{{ h.assigned_by.full_name }}</td>
+          <td>{{ h.returned_by.full_name if h.returned_by else '—' }}</td>
+          <td>
+            {% if h.assign_note %}<div><small class="text-secondary">Teslim:</small> {{ h.assign_note }}</div>{% endif %}
+            {% if h.return_note %}<div><small class="text-secondary">İade:</small> {{ h.return_note }}</div>{% endif %}
+            {% if not h.assign_note and not h.return_note %}—{% endif %}
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6" class="text-secondary">Bu demirbaş için henüz zimmet kaydı yok.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field %}
+{% block title %}{{ 'Demirbaşı düzenle' if asset else 'Yeni demirbaş' }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+  <h1 class="h3 mb-0">{{ 'Demirbaşı düzenle' if asset else 'Yeni demirbaş' }}</h1>
+  <a href="{{ url_for('assets.detail', asset_id=asset.id) if asset else url_for('assets.index') }}" class="btn btn-outline-secondary btn-sm">Vazgeç</a>
+</div>
+<div class="card form-card">
+  <div class="card-body">
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {{ field(form.code, maxlength=50, autofocus=true) }}
+      {{ field(form.name, maxlength=120) }}
+      {{ field(form.category, maxlength=80, list="category-list") }}
+      <datalist id="category-list">{% for c in categories %}<option value="{{ c }}">{% endfor %}</datalist>
+      <div class="row">
+        <div class="col-sm-6">{{ field(form.brand, maxlength=80) }}</div>
+        <div class="col-sm-6">{{ field(form.model, maxlength=80) }}</div>
+      </div>
+      {{ field(form.serial_number, maxlength=100) }}
+      {{ field(form.location, maxlength=120) }}
+      {{ field(form.acquisition_date) }}
+      {% if locked %}
+        <div class="mb-3">
+          <label class="form-label">Durum</label>
+          <input class="form-control" value="{{ asset.status_label }}" disabled>
+          <div class="form-text">Zimmetli demirbaşın durumu değiştirilemez; önce zimmet iade alınmalıdır.</div>
+        </div>
+      {% else %}
+        {{ field(form.status) }}
+        {% if not asset %}<div class="form-text mb-3 mt-n2">Zaten bir personelde olan demirbaşı önce "Depoda" kaydedip ardından geçmiş tarihli zimmet verin.</div>{% endif %}
+      {% endif %}
+      {{ field(form.description, rows=3, maxlength=1000) }}
+      {{ form.submit(class="btn btn-primary") }}
+    </form>
+  </div>
+</div>
+{% endblock %}

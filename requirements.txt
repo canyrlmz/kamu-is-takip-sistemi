@@ -1,0 +1,19 @@
+# Sabitlenmiş sürümler (Python 3.12 ile test edildi)
+Flask==3.1.3
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.0.54
+Flask-Migrate==4.1.0
+alembic==1.20.0
+Flask-Login==0.6.3
+Flask-WTF==1.3.0
+WTForms==3.2.2
+Flask-Limiter==4.1.1
+flask-talisman==1.1.0
+Werkzeug==3.1.9
+python-dotenv==1.2.4
+# Windows'ta IANA saat dilimi veritabanı (Europe/Istanbul) için gerekli
+tzdata==2026.5
+# Aşama 5'te kullanılacak Excel dışa aktarma
+openpyxl==3.1.5
+# Test
+pytest==9.1.1

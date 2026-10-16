@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field %}
+{% block title %}{{ 'Kaydı düzenle' if vehicle else 'Yeni araç / iş makinesi' }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+  <h1 class="h3 mb-0">{{ 'Kaydı düzenle' if vehicle else 'Yeni araç / iş makinesi' }}</h1>
+  <a href="{{ url_for('vehicles.detail', vehicle_id=vehicle.id) if vehicle else url_for('vehicles.index') }}" class="btn btn-outline-secondary btn-sm">Vazgeç</a>
+</div>
+<div class="card form-card">
+  <div class="card-body">
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {{ field(form.vehicle_type, maxlength=60, list="type-list", autofocus=true) }}
+      <datalist id="type-list">{% for t in types %}<option value="{{ t }}">{% endfor %}</datalist>
+      {{ field(form.identifier, maxlength=30) }}
+      <div class="form-text mb-3 mt-n2">Boşluklar silinir ve büyük harfe çevrilir (örn. 78 abc 123 → 78ABC123).</div>
+      <div class="row">
+        <div class="col-sm-6">{{ field(form.brand, maxlength=60) }}</div>
+        <div class="col-sm-6">{{ field(form.model, maxlength=60) }}</div>
+      </div>
+      <div class="row">
+        <div class="col-sm-4">{{ field(form.model_year, inputmode="numeric") }}</div>
+        <div class="col-sm-4">
+          {% if locked %}
+            <div class="mb-3">
+              <label class="form-label">Sayaç türü</label>
+              <input class="form-control" value="{{ vehicle.meter_label }}" disabled>
+              <div class="form-text">Bakım kaydı bulunduğu için değiştirilemez.</div>
+            </div>
+          {% else %}{{ field(form.meter_type) }}{% endif %}
+        </div>
+        <div class="col-sm-4">{{ field(form.current_meter, inputmode="numeric", min=0) }}</div>
+      </div>
+      {{ field(form.status) }}
+      {{ field(form.description, rows=3, maxlength=1000) }}
+      {{ form.submit(class="btn btn-primary") }}
+    </form>
+  </div>
+</div>
+{% endblock %}

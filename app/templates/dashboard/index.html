@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Kontrol Paneli{% endblock %}
+{% block content %}
+<h1 class="h3 mb-1">Hoş geldiniz, {{ current_user.full_name }}</h1>
+<p class="text-secondary">Rol: {{ current_user.role_label }}{% if current_user.last_login_at %} · Son giriş: {{ current_user.last_login_at|dt }}{% endif %}</p>
+
+<div class="row g-3 mb-4">
+  {% if can('users.manage') %}
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="card h-100"><div class="card-body">
+      <div class="text-secondary small">Aktif kullanıcı</div>
+      <div class="display-6">{{ active_users }}</div>
+    </div></div>
+  </div>
+  {% endif %}
+  {% if asset_stats %}
+  <div class="col-12 col-xl-8">
+    <div class="card h-100"><div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h6 mb-0">Demirbaş ve Zimmet</h2>
+        <a href="{{ url_for('assets.index') }}" class="small">Listeyi aç</a>
+      </div>
+      <div class="row text-center g-2">
+        <div class="col-4"><div class="display-6">{{ asset_stats.total }}</div><div class="text-secondary small">Toplam demirbaş</div></div>
+        <div class="col-4"><div class="display-6">{{ asset_stats.assigned }}</div><div class="text-secondary small">Aktif zimmet</div></div>
+        <div class="col-4"><div class="display-6">{{ asset_stats.available }}</div><div class="text-secondary small">Uygun (zimmetlenebilir)</div></div>
+      </div>
+    </div></div>
+  </div>
+  {% endif %}
+  {% if ticket_stats %}
+  <div class="col-12 col-xl-8">
+    <div class="card h-100"><div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h6 mb-0">Arıza ve Talepler{% if not can('tickets.view_all') %} <small class="text-secondary">(sizin taleplerinizle sınırlı)</small>{% endif %}</h2>
+        <a href="{{ url_for('tickets.index') }}" class="small">Listeyi aç</a>
+      </div>
+      <div class="row text-center g-2">
+        <div class="col-{{ 3 if can('tickets.view_all') else 4 }}"><div class="display-6">{{ ticket_stats.open }}</div><div class="text-secondary small">Açık talep</div></div>
+        <div class="col-{{ 3 if can('tickets.view_all') else 4 }}"><div class="display-6">{{ ticket_stats.in_progress }}</div><div class="text-secondary small">İşlemdeki talep</div></div>
+        <div class="col-{{ 3 if can('tickets.view_all') else 4 }}"><div class="display-6">{{ ticket_stats.mine }}</div><div class="text-secondary small">Bana atanan (açık)</div></div>
+        {% if can('tickets.view_all') %}<div class="col-3"><div class="display-6">{{ ticket_stats.unassigned }}</div><div class="text-secondary small">Atanmamış (açık)</div></div>{% endif %}
+      </div>
+    </div></div>
+  </div>
+  {% endif %}
+  {% if vehicle_stats %}
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="card h-100"><div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h6 mb-0">Araç ve Bakım</h2>
+        {% if can('maintenance.view') %}<a href="{{ url_for('vehicles.upcoming') }}" class="small">Özeti aç</a>{% else %}<a href="{{ url_for('vehicles.index') }}" class="small">Listeyi aç</a>{% endif %}
+      </div>
+      <div class="row text-center g-2">
+        <div class="col-{{ 3 if can('maintenance.view') else 12 }}"><div class="display-6">{{ vehicle_stats.total }}</div><div class="text-secondary small">Kayıtlı araç</div></div>
+        {% if can('maintenance.view') %}
+        <div class="col-3"><a class="text-decoration-none text-reset" href="{{ url_for('vehicles.index', bakim='gecikmis') }}"><div class="display-6 {{ 'text-danger' if vehicle_stats.overdue }}">{{ vehicle_stats.overdue }}</div><div class="text-secondary small">Gecikmiş</div></a></div>
+        <div class="col-3"><a class="text-decoration-none text-reset" href="{{ url_for('vehicles.index', bakim='yaklasan') }}"><div class="display-6">{{ vehicle_stats.upcoming }}</div><div class="text-secondary small">Yaklaşan</div></a></div>
+        <div class="col-3"><a class="text-decoration-none text-reset" href="{{ url_for('vehicles.index', bakim='planlanmamis') }}"><div class="display-6">{{ vehicle_stats.unscheduled }}</div><div class="text-secondary small">Planlanmamış</div></a></div>
+        {% endif %}
+      </div>
+    </div></div>
+  </div>
+  {% endif %}
+</div>
+
+{% if can('audit.view') %}
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span>Son denetim kayıtları</span>
+    <a href="{{ url_for('admin.audit_log') }}" class="small">Tümünü gör</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-sm mb-0 align-middle">
+      <thead><tr><th>Zaman</th><th>Kullanıcı</th><th>İşlem</th></tr></thead>
+      <tbody>
+      {% for e in recent_events %}
+        <tr><td class="text-nowrap">{{ e.created_at|dt }}</td><td>{{ e.user.username if e.user else '—' }}</td><td>{{ e.action_label }}</td></tr>
+      {% else %}
+        <tr><td colspan="3" class="text-secondary">Henüz kayıt yok.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

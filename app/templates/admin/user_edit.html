@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field %}
+{% block title %}Hesabı düzenle{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+  <h1 class="h3 mb-0">Hesabı düzenle: {{ target.username }}</h1>
+  <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary btn-sm">Listeye dön</a>
+</div>
+<div class="card form-card">
+  <div class="card-body">
+    {% if is_superadmin %}
+    <div class="alert alert-info small">Bu hesap sistemin süper adminidir: rolü, izinleri ve etkinliği bu ekrandan değiştirilemez (tüm izinlere sahiptir). Yetki devri yalnızca sunucuda <code>transfer-superadmin</code> komutuyla yapılır.</div>
+    {% endif %}
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {{ field(form.full_name, autocomplete="off", maxlength=120) }}
+      {% include "admin/_user_fields.html" %}
+      {% if form.active %}
+      <div class="form-check mb-3">
+        {{ form.active(class="form-check-input") }}
+        {{ form.active.label(class="form-check-label") }}
+      </div>
+      {% endif %}
+      {{ form.submit(class="btn btn-primary") }}
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/user_form.js') }}"></script>{% endblock %}

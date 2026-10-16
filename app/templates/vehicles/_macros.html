@@ -1,0 +1,14 @@
+{% macro alert_badge(alert) %}
+  {% if alert.status == 'inactive' %}<span class="badge text-bg-light border text-secondary">Kapsam dışı</span>
+  {% else %}<span class="badge text-bg-{{ alert.badge }}">{{ alert.label }}</span>{% endif %}
+{% endmacro %}
+
+{% macro plan_remaining(plan, unit) %}
+  {% if plan.days_left is not none %}
+    {% if plan.days_left < 0 %}{{ -plan.days_left }} gün geçti{% elif plan.days_left == 0 %}bugün{% else %}{{ plan.days_left }} gün kaldı{% endif %}
+  {% endif %}
+  {% if plan.days_left is not none and plan.meter_left is not none %} · {% endif %}
+  {% if plan.meter_left is not none %}
+    {% if plan.meter_left <= 0 %}{{ -plan.meter_left }} {{ unit }} aşıldı{% else %}{{ plan.meter_left }} {{ unit }} kaldı{% endif %}
+  {% endif %}
+{% endmacro %}

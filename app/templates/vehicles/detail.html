@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% from "vehicles/_macros.html" import alert_badge, plan_remaining %}
+{% block title %}{{ vehicle.identifier }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+  <div>
+    <h1 class="h3 mb-1">{{ vehicle.identifier }} <small class="text-secondary">{{ vehicle.vehicle_type }}</small></h1>
+    <div>
+      <span class="badge text-bg-{{ vehicle.status_badge }}">{{ vehicle.status_label }}</span>
+      {% if vehicle.archived %}<span class="badge text-bg-dark">Arşivde</span>{% endif %}
+      {% if alert %}{{ alert_badge(alert) }}{% endif %}
+    </div>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <a href="{{ url_for('vehicles.index') }}" class="btn btn-outline-secondary btn-sm">Listeye dön</a>
+    {% if not vehicle.archived %}
+      {% if can('vehicles.update') %}<a href="{{ url_for('vehicles.edit', vehicle_id=vehicle.id) }}" class="btn btn-outline-primary btn-sm">Düzenle</a>{% endif %}
+      {% if can('maintenance.create') %}<a href="{{ url_for('vehicles.add_maintenance_view', vehicle_id=vehicle.id) }}" class="btn btn-primary btn-sm">Bakım ekle</a>{% endif %}
+      {% if vehicle.status == 'out_of_service' and can('vehicles.update') %}
+        <form method="post" action="{{ url_for('vehicles.archive', vehicle_id=vehicle.id) }}" class="d-inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-outline-danger btn-sm">Arşivle (pasife al)</button>
+        </form>
+      {% endif %}
+    {% elif can('vehicles.update') %}
+      <form method="post" action="{{ url_for('vehicles.restore', vehicle_id=vehicle.id) }}" class="d-inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-outline-success btn-sm">Arşivden geri al</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-12 col-lg-6">
+    <div class="card h-100"><div class="card-header">Kayıt bilgileri</div>
+      <dl class="row mb-0 p-3 detail-list">
+        <dt class="col-sm-4">Marka / model</dt><dd class="col-sm-8">{{ vehicle.brand or '—' }} / {{ vehicle.model or '—' }}</dd>
+        <dt class="col-sm-4">Model yılı</dt><dd class="col-sm-8">{{ vehicle.model_year or '—' }}</dd>
+        <dt class="col-sm-4">Güncel sayaç</dt><dd class="col-sm-8">{{ '{:,}'.format(vehicle.current_meter).replace(',', '.') }} {{ vehicle.meter_unit }} <small class="text-secondary">({{ vehicle.meter_label }})</small></dd>
+        <dt class="col-sm-4">Açıklama</dt><dd class="col-sm-8">{{ vehicle.description or '—' }}</dd>
+        <dt class="col-sm-4">Oluşturan</dt><dd class="col-sm-8">{{ vehicle.created_by.full_name if vehicle.created_by else '—' }} · {{ vehicle.created_at|dt }}</dd>
+        <dt class="col-sm-4">Son güncelleme</dt><dd class="col-sm-8">{{ vehicle.updated_by.full_name if vehicle.updated_by else '—' }} · {{ vehicle.updated_at|dt }}</dd>
+      </dl>
+    </div>
+  </div>
+  {% if alert %}
+  <div class="col-12 col-lg-6">
+    <div class="card h-100"><div class="card-header">Bakım planları (türe göre)</div>
+      {% if alert.status == 'inactive' %}
+        <div class="card-body text-secondary">Kullanım dışı veya arşivdeki kayıtlar için bakım uyarısı hesaplanmaz.</div>
+      {% elif alert.plans %}
+      <div class="table-responsive"><table class="table table-sm mb-0 align-middle">
+        <thead><tr><th>Tür</th><th>Sonraki bakım</th><th>Durum</th></tr></thead>
+        <tbody>
+        {% for p in alert.plans %}
+          <tr>
+            <td>{{ maintenance_types[p.maintenance_type] }}</td>
+            <td>
+              {% if p.next_date %}{{ p.next_date|d }}{% endif %}{% if p.next_date and p.next_meter is not none %} / {% endif %}
+              {% if p.next_meter is not none %}{{ p.next_meter }} {{ vehicle.meter_unit }}{% endif %}
+              <div class="small text-secondary">{{ plan_remaining(p, vehicle.meter_unit) }}</div>
+            </td>
+            <td><span class="badge text-bg-{{ {'overdue':'danger','upcoming':'warning','normal':'success'}[p.status] }}">{{ alert_labels[p.status] }}</span></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table></div>
+      {% else %}
+        <div class="card-body text-secondary">Aktif bakım planı yok (bakımı planlanmamış). Bakım eklerken “sonraki bakım” tarihi veya sayacı girin.</div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% if can('maintenance.view') %}
+<div class="card">
+  <div class="card-header">Bakım geçmişi</div>
+  <div class="table-responsive">
+    <table class="table table-sm mb-0 align-middle">
+      <thead><tr><th>Tarih</th><th>Tür</th><th class="text-end">Sayaç</th><th>İşlem</th><th>Sağlayıcı</th><th class="text-end">Maliyet</th><th>Sonraki</th><th></th></tr></thead>
+      <tbody>
+      {% for r in records %}
+        <tr class="{{ 'text-secondary' if r.void }}">
+          <td class="text-nowrap {{ 'text-decoration-line-through' if r.void }}">{{ r.maintenance_date|d }}</td>
+          <td class="{{ 'text-decoration-line-through' if r.void }}">{{ r.type_label }}</td>
+          <td class="text-end text-nowrap {{ 'text-decoration-line-through' if r.void }}">{{ r.meter_reading }} {{ vehicle.meter_unit }}</td>
+          <td>
+            <span class="{{ 'text-decoration-line-through' if r.void }}">{{ r.description }}</span>
+            {% if r.notes %}<div class="small text-secondary">{{ r.notes }}</div>{% endif %}
+            {% if r.void %}
+              <div class="small text-danger">İPTAL: {{ r.void.reason }} — {{ r.void.voided_by.full_name if r.void.voided_by else '—' }}, {{ r.void.created_at|dt }}</div>
+            {% endif %}
+          </td>
+          <td>{{ r.provider or '—' }}</td>
+          <td class="text-end text-nowrap">{{ r.cost_kurus|tl }}</td>
+          <td class="text-nowrap small">
+            {% if r.next_date %}{{ r.next_date|d }}{% endif %}{% if r.next_meter is not none %} {{ r.next_meter }} {{ vehicle.meter_unit }}{% endif %}
+            {% if not r.next_date and r.next_meter is none %}—{% endif %}
+          </td>
+          <td class="text-nowrap">
+            {% if can('maintenance.void') and not r.void and not vehicle.archived %}
+              <a href="{{ url_for('vehicles.void_maintenance_view', vehicle_id=vehicle.id, record_id=r.id) }}" class="btn btn-outline-danger btn-sm py-0">İptal et</a>
+            {% endif %}
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="8" class="text-secondary">Henüz bakım kaydı yok.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

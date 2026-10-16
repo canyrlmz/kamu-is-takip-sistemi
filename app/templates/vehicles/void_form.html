@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field %}
+{% block title %}Bakım kaydını iptal et{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+  <h1 class="h3 mb-0">Bakım kaydını iptal et</h1>
+  <a href="{{ url_for('vehicles.detail', vehicle_id=vehicle.id) }}" class="btn btn-outline-secondary btn-sm">Vazgeç</a>
+</div>
+<div class="card mb-3"><div class="card-body">
+  <div><strong>{{ vehicle.identifier }}</strong> · {{ record.type_label }} · {{ record.maintenance_date|d }} · {{ record.meter_reading }} {{ vehicle.meter_unit }}</div>
+  <div class="text-secondary">{{ record.description }}</div>
+</div></div>
+<div class="alert alert-warning small">İptal geri alınamaz ve silme değildir: kayıt gerekçe, kullanıcı ve zamanla birlikte geçmişte kalır, ancak
+  uyarı hesabına dahil edilmez. Araç sayacı otomatik değişmez; gerekirse aracı düzenleyin.</div>
+<div class="card form-card"><div class="card-body">
+  <form method="post" novalidate>
+    {{ form.hidden_tag() }}
+    {{ field(form.reason, rows=3, maxlength=500, autofocus=true) }}
+    {{ form.submit(class="btn btn-danger") }}
+  </form>
+</div></div>
+{% endblock %}

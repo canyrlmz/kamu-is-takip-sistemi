@@ -1,0 +1,12 @@
+{% extends "base_public.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="login-card card shadow-sm">
+  <div class="card-body p-4 text-center">
+    <div class="display-5 text-secondary">{{ code }}</div>
+    <h1 class="h4">{{ title }}</h1>
+    <p class="text-secondary">{{ message }}</p>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary">Ana sayfaya dön</a>
+  </div>
+</div>
+{% endblock %}

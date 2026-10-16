@@ -1,0 +1,25 @@
+{# Rol / kıdem / izin alanları (oluşturma ve düzenleme ekranlarında ortak). Betik yalnızca kolaylıktır; sunucu doğrular. #}
+{% from "_macros.html" import field %}
+{% if form.role %}{{ field(form.role) }}{% endif %}
+{{ field(form.seniority_level) }}
+<p class="form-text mt-n2 mb-3">Kıdem seviyesi yalnızca kurumdaki hiyerarşik düzeyi gösterir; hiçbir yetki vermez.</p>
+{% if form.permissions %}
+<fieldset class="mb-3">
+  <legend class="form-label fs-6">Modül izinleri</legend>
+  <p class="form-text mt-0">Seçilen role uygun olmayan izinler devre dışı kalır. Kullanıcı yönetimi izni hiçbir role verilemez.</p>
+  {% for module_label, items in permission_groups %}
+  <div class="mb-2">
+    <div class="fw-semibold small">{{ module_label }}</div>
+    {% for key, description in items %}
+    <div class="form-check">
+      <input class="form-check-input perm-checkbox" type="checkbox" name="permissions" id="perm-{{ key }}" value="{{ key }}"
+             {{ 'checked' if key in (form.permissions.data or []) }}>
+      <label class="form-check-label" for="perm-{{ key }}">{{ description }}</label>
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+  {% for error in form.permissions.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+</fieldset>
+<div id="perm-config" data-config='{{ permission_config|tojson }}' hidden></div>
+{% endif %}

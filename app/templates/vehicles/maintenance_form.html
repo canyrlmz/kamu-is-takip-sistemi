@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field %}
+{% block title %}Bakım kaydı ekle{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+  <div>
+    <h1 class="h3 mb-0">Bakım kaydı ekle</h1>
+    <div class="text-secondary">{{ vehicle.identifier }} · {{ vehicle.vehicle_type }} · güncel sayaç {{ vehicle.current_meter }} {{ vehicle.meter_unit }}</div>
+  </div>
+  <a href="{{ url_for('vehicles.detail', vehicle_id=vehicle.id) }}" class="btn btn-outline-secondary btn-sm">Vazgeç</a>
+</div>
+<div class="alert alert-info small">Kaydedilen bakım kayıtları değiştirilemez ve silinemez; hatalı kayıt gerekçeyle iptal edilebilir.
+  Sayaçlar <strong>{{ vehicle.meter_label|lower }}</strong> ({{ vehicle.meter_unit }}) cinsindendir.</div>
+<div class="card form-card">
+  <div class="card-body">
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      <div class="row">
+        <div class="col-sm-6">{{ field(form.maintenance_type, autofocus=true) }}</div>
+        <div class="col-sm-6">{{ field(form.maintenance_date) }}</div>
+      </div>
+      {{ field(form.meter_reading, inputmode="numeric", min=0) }}
+      {{ field(form.description, rows=3, maxlength=1000) }}
+      <div class="row">
+        <div class="col-sm-6">{{ field(form.provider, maxlength=120) }}</div>
+        <div class="col-sm-6">{{ field(form.cost, inputmode="decimal", placeholder="1250,50") }}</div>
+      </div>
+      <h2 class="h6 mt-2">Sonraki bakım (isteğe bağlı)</h2>
+      <div class="row">
+        <div class="col-sm-6">{{ field(form.next_date) }}</div>
+        <div class="col-sm-6">{{ field(form.next_meter, inputmode="numeric", min=0) }}</div>
+      </div>
+      <div class="form-text mb-3 mt-n2">İkisi de boş bırakılırsa bu bakım türü için plan kapatılır. Her bakım türünün planı ayrı izlenir.</div>
+      {{ field(form.notes, rows=2, maxlength=1000) }}
+      {{ form.submit(class="btn btn-primary") }}
+    </form>
+  </div>
+</div>
+{% endblock %}
